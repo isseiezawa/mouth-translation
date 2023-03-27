@@ -1,6 +1,8 @@
 <template>
   <div class="hello">
     <p>{{text}}</p>
+    <button v-on:click='fetchApi'>api</button>
+    <input type="file" id="file-input">
   </div>
 </template>
 
@@ -15,10 +17,24 @@ export default {
     }
   },
   mounted() {
-    // リクエストチェック
-    axios.get('https://jsonplaceholder.typicode.com/users')
-        .then(response => this.text = response)
-        .catch(error => console.log(error))
+  },
+  methods: {
+    async fetchApi() {
+      const url = 'https://api.openai.com/v1/audio/transcriptions'
+
+      const fileInput = document.getElementById('file-input')
+      const data = new FormData()
+      data.append('model', 'whisper-1')
+      data.append('file', fileInput.files[0])
+      data.append('language', 'ja')
+
+      await axios.post(url, data, { headers: {
+        'Authorization': `Bearer ${process.env.VUE_APP_WHISPER_API_KEY}`,
+        'Content-Type': 'multipart/form-data'
+      } })
+          .then(response => this.text = response.data.text)
+          .catch(error => console.log(error))
+    }
   }
 }
 </script>
