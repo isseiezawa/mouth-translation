@@ -1,8 +1,7 @@
 <template>
   <div class="hello">
     <p>{{text}}</p>
-    <button v-on:click='fetchApi'>api</button>
-    <input type="file" id="file-input">
+    <button @touchstart='recordStart' @touchend='recordStop'>録音</button>
   </div>
 </template>
 
@@ -13,19 +12,67 @@ export default {
   name: 'HelloWorld',
   data() {
     return {
-      text: ''
+      text: '',
+      mediaRecorder: null,
+      chunks: [],
     }
   },
   mounted() {
+    window.oncontextmenu = (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      return false
+    }
+    this.recordSetup()
   },
   methods: {
-    async fetchApi() {
-      const url = 'https://api.openai.com/v1/audio/transcriptions'
+    recordSetup() {
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        console.log("getUserMedia supported.");
+        navigator.mediaDevices
+          .getUserMedia(
+            // 制約 - 音声のみがこのアプリでは必要
+            {
+              audio: true,
+            }
+          )
+          // 成功コールバック
+          .then((stream) => {
+            this.mediaRecorder = new MediaRecorder(stream)
 
-      const fileInput = document.getElementById('file-input')
+            this.mediaRecorder.ondataavailable = (e) => {
+              this.chunks.push(e.data)
+            }
+
+            this.mediaRecorder.onstop = () => {
+              console.log(this.chunks)
+              const blob = new Blob(this.chunks, {
+                type: 'audio/mp3'
+              })
+              this.speechToText(blob)
+              this.chunks = []
+            }
+          })
+          // エラーコールバック
+          .catch((err) => {
+            console.error(`The following getUserMedia error occurred: ${err}`);
+          });
+      } else {
+        console.log("getUserMedia not supported on your browser!");
+      }
+    },
+    recordStart() {
+      this.mediaRecorder.start()
+    },
+    recordStop() {
+      this.mediaRecorder.stop()
+    },
+    async speechToText(blob) {
+      console.log(blob)
+      const url = 'https://api.openai.com/v1/audio/transcriptions'
       const data = new FormData()
       data.append('model', 'whisper-1')
-      data.append('file', fileInput.files[0])
+      data.append('file', blob, 'recording.mp3')
       data.append('language', 'ja')
 
       await axios.post(url, data, { headers: {
