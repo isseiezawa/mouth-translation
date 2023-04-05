@@ -17,7 +17,7 @@
       </select>
       <label for='output'>( output )</label>
     </div>
-    <button @touchstart='recordStart' @touchend='recordStop'>録音</button>
+    <button @touchstart='recordStart' @touchend='recordStop' class='recordButton'>録音</button>
   </div>
 </template>
 
@@ -130,5 +130,13 @@ export default {
   bottom: 0;
   right: 0;
   margin: 1rem;
+}
+
+.recordButton {
+  position: fixed;
+  top: 0;
+  left: 0;
+  margin: 0.5rem;
+  height: 80vh;
 }
 </style>
