@@ -1,12 +1,23 @@
 <template>
   <div class="hello">
     <p>{{text}}</p>
+    <select v-model='receiveLanguage'>
+      <option v-for='(language, index) in languages' :key='index' :value='language.code'>
+        {{language.name}}
+      </option>
+    </select>
+    <select v-model='outputLanguage'>
+      <option v-for='(language, index) in languages' :key='index' :value='language.code'>
+        {{language.name}}
+      </option>
+    </select>
     <button @touchstart='recordStart' @touchend='recordStop'>録音</button>
   </div>
 </template>
 
 <script>
 import axios from 'axios'
+import languages from '../assets/languages.json'
 
 export default {
   name: 'HelloWorld',
@@ -15,6 +26,9 @@ export default {
       text: '',
       mediaRecorder: null,
       chunks: [],
+      languages: languages,
+      receiveLanguage: 'ja',
+      outputLanguage: 'en'
     }
   },
   mounted() {
@@ -70,7 +84,7 @@ export default {
       const data = new FormData()
       data.append('model', 'whisper-1')
       data.append('file', blob, 'recording.mp3')
-      data.append('language', 'ja')
+      data.append('language', this.receiveLanguage)
 
       await axios.post(url, data, { headers: {
         'Authorization': `Bearer ${process.env.VUE_APP_WHISPER_API_KEY}`,
@@ -85,8 +99,8 @@ export default {
       await axios.get(url, {
         params: {
           text: text,
-          source: 'ja',
-          target: 'en'
+          source: this.receiveLanguage,
+          target: this.outputLanguage
         }
       })
         .then(response => this.text = response.data.text)
