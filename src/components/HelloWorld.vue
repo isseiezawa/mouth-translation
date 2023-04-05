@@ -28,7 +28,6 @@ export default {
   methods: {
     recordSetup() {
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        console.log("getUserMedia supported.");
         navigator.mediaDevices
           .getUserMedia(
             // 制約 - 音声のみがこのアプリでは必要
@@ -45,7 +44,6 @@ export default {
             }
 
             this.mediaRecorder.onstop = () => {
-              console.log(this.chunks)
               const blob = new Blob(this.chunks, {
                 type: 'audio/mp3'
               })
@@ -68,7 +66,6 @@ export default {
       this.mediaRecorder.stop()
     },
     async speechToText(blob) {
-      console.log(blob)
       const url = 'https://api.openai.com/v1/audio/transcriptions'
       const data = new FormData()
       data.append('model', 'whisper-1')
@@ -79,8 +76,21 @@ export default {
         'Authorization': `Bearer ${process.env.VUE_APP_WHISPER_API_KEY}`,
         'Content-Type': 'multipart/form-data'
       } })
-          .then(response => this.text = response.data.text)
+          .then(response => this.textTranslation(response.data.text))
           .catch(error => console.log(error))
+    },
+    async textTranslation(text) {
+      const url = 'https://script.google.com/macros/s/AKfycby05LCeZMPERoqQc-aAUzxwyDoCv24GNluE69MBrp4IuZjBLSF1q6cN68zo4GL-3hQ/exec'
+
+      await axios.get(url, {
+        params: {
+          text: text,
+          source: 'ja',
+          target: 'en'
+        }
+      })
+        .then(response => this.text = response.data.text)
+        .catch(error => console.log(error))
     }
   }
 }
