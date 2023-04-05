@@ -1,16 +1,22 @@
 <template>
   <div class="hello">
     <p>{{text}}</p>
-    <select v-model='receiveLanguage'>
-      <option v-for='(language, index) in languages' :key='index' :value='language.code'>
-        {{language.name}}
-      </option>
-    </select>
-    <select v-model='outputLanguage'>
-      <option v-for='(language, index) in languages' :key='index' :value='language.code'>
-        {{language.name}}
-      </option>
-    </select>
+    <div class='input'>
+      <label for='input'>( input )</label>
+      <select v-model='inputLanguage' id='input'>
+        <option v-for='(language, index) in languages' :key='index' :value='language.code'>
+          {{language.name}}
+        </option>
+      </select>
+    </div>
+    <div class='output'>
+      <select v-model='outputLanguage' id='output'>
+        <option v-for='(language, index) in languages' :key='index' :value='language.code'>
+          {{language.name}}
+        </option>
+      </select>
+      <label for='output'>( output )</label>
+    </div>
     <button @touchstart='recordStart' @touchend='recordStop'>録音</button>
   </div>
 </template>
@@ -27,7 +33,7 @@ export default {
       mediaRecorder: null,
       chunks: [],
       languages: languages,
-      receiveLanguage: 'ja',
+      inputLanguage: 'ja',
       outputLanguage: 'en'
     }
   },
@@ -84,7 +90,7 @@ export default {
       const data = new FormData()
       data.append('model', 'whisper-1')
       data.append('file', blob, 'recording.mp3')
-      data.append('language', this.receiveLanguage)
+      data.append('language', this.inputLanguage)
 
       await axios.post(url, data, { headers: {
         'Authorization': `Bearer ${process.env.VUE_APP_WHISPER_API_KEY}`,
@@ -99,7 +105,7 @@ export default {
       await axios.get(url, {
         params: {
           text: text,
-          source: this.receiveLanguage,
+          source: this.inputLanguage,
           target: this.outputLanguage
         }
       })
@@ -112,18 +118,17 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-h3 {
-  margin: 40px 0 0;
+.input {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  margin: 1rem;
 }
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-li {
-  display: inline-block;
-  margin: 0 10px;
-}
-a {
-  color: #42b983;
+
+.output {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  margin: 1rem;
 }
 </style>
