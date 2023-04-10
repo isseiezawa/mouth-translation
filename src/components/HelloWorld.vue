@@ -52,6 +52,7 @@ export default {
   },
   methods: {
     async mouthSetup() {
+      const delta = new THREE.Clock()
       const scene = new THREE.Scene()
       const camera = new THREE.PerspectiveCamera( 75, innerWidth / innerHeight, 0.1, 100 )
 
@@ -70,6 +71,15 @@ export default {
       const loader = new GLTFLoader()
       const model = await loader.loadAsync(mouth_model)
 
+      let mixer
+
+      if(model.animations.length) {
+        mixer = new THREE.AnimationMixer(model.scene)
+        const action = mixer.clipAction(model.animations[0])
+
+        action.play()
+      }
+
       scene.add( model.scene )
 
       const controls = new OrbitControls(camera, document.body)
@@ -79,6 +89,10 @@ export default {
       function animate() {
         requestAnimationFrame( animate )
         renderer.render( scene, camera )
+
+        if(mixer) {
+          mixer.update(delta.getDelta())
+        }
 
         controls.update()
       }
