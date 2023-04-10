@@ -1,6 +1,7 @@
+
 <template>
   <div class="hello">
-    <p>{{text}}</p>
+    <p class="text">{{text}}</p>
     <div class='input'>
       <label for='input'>( input )</label>
       <select v-model='inputLanguage' id='input'>
@@ -22,6 +23,9 @@
 </template>
 
 <script>
+import * as THREE from 'three'
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import axios from 'axios'
 import languages from '../assets/languages.json'
 
@@ -43,9 +47,44 @@ export default {
       e.stopPropagation()
       return false
     }
+    this.mouthSetup()
     this.recordSetup()
   },
   methods: {
+    async mouthSetup() {
+      const scene = new THREE.Scene()
+      const camera = new THREE.PerspectiveCamera( 75, innerWidth / innerHeight, 0.1, 100 )
+
+      const renderer = new THREE.WebGLRenderer()
+      renderer.setSize(innerWidth, innerHeight)
+      renderer.outputEncoding = THREE.sRGBEncoding
+      document.body.appendChild( renderer.domElement )
+
+      const ambientLight = new THREE.AmbientLight( 0xffffff, 1.0)
+      scene.add( ambientLight )
+
+      const directionalLight = new THREE.DirectionalLight( 0xffffff, 1.0 )
+      scene.add( directionalLight )
+
+      const mouth_model = '/models/translate_mouth.gltf'
+      const loader = new GLTFLoader()
+      const model = await loader.loadAsync(mouth_model)
+
+      scene.add( model.scene )
+
+      const controls = new OrbitControls(camera, document.body)
+
+      camera.position.z = 4
+
+      function animate() {
+        requestAnimationFrame( animate )
+        renderer.render( scene, camera )
+
+        controls.update()
+      }
+
+      animate()
+    },
     recordSetup() {
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         navigator.mediaDevices
@@ -73,10 +112,10 @@ export default {
           })
           // エラーコールバック
           .catch((err) => {
-            console.error(`The following getUserMedia error occurred: ${err}`);
+            this.text = `The following getUserMedia error occurred: ${err}`
           });
       } else {
-        console.log("getUserMedia not supported on your browser!");
+        this.text = "getUserMedia not supported on your browser!"
       }
     },
     recordStart() {
@@ -118,6 +157,17 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+canvas {
+  height: 100vh;
+  width: 100vw;
+}
+
+.text {
+  position: fixed;
+  top: 0;
+  left: 50%;
+}
+
 .input {
   position: fixed;
   bottom: 0;
